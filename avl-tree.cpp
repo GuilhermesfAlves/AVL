@@ -1,228 +1,155 @@
 #include <avl-tree.hpp>
 
-void nodo::destroi_arv(){
-
-    if (!this)
-        return;
-    if (this -> esq)
-        this -> esq -> destroi_arv();
-    if (this -> dir)
-        this -> dir -> destroi_arv();
-    free(this);
+int AVLTree::altura(nodo_t* nodo){
+    return (nodo)? nodo -> alt : 0;
 }
 
-nodo *insere(nodo* arv, int ins){
-    if (!arv)
-        return cria_no(ins);
+int AVLTree::fator_balanceamento(nodo_t* nodo){
+    return (nodo)? altura(nodo -> esq) - altura(nodo -> dir) : 0;
+}
 
-    if (arv -> val > ins)
-        arv -> esq = insere(arv -> esq, ins);
+void AVLTree::att_altura(nodo_t* nodo){
+    nodo -> alt = 1 + max(altura(nodo -> esq), altura(nodo -> dir));
+}
+
+void AVLTree::destroi(nodo_t* nodo){
+    if (!nodo)
+        return;
+    AVLTree::destroi(nodo -> esq);
+    AVLTree::destroi(nodo -> dir);
+    delete nodo;
+}
+
+nodo_t* AVLTree::insere(nodo_t* nodo, int val){
+    int bal;
+
+    if (!nodo) 
+        return new nodo_t(val);
+
+    if (val < nodo -> val)
+        nodo -> esq = insere(nodo -> esq, val);
+    else if (val > nodo -> val) 
+        nodo -> dir = insere(nodo -> dir, val);
     else 
-        arv -> dir = insere(arv -> dir, ins);
+        return nodo;
     
-    arv -> arruma_alt();
-    return arv;
-}
 
-void nodo::arruma_alt(){
-    this -> alt = maior((this -> esq -> altura_no()), (this -> dir -> altura_no())) + 1;
-}
+    AVLTree::att_altura(nodo);
 
-short maior(short a, short b){
-    return (a > b)? a: b;
-}
+    bal = AVLTree::fator_balanceamento(nodo);
 
-short nodo::altura_no(){
-    return (this)? this -> alt: -1;
-}
-
-short nodo::r_arruma_alt(){
-    return (this)? (maior((this -> esq -> altura_no()), (this -> dir -> altura_no())) + 1) : -1;
-}
-
-void nodo::imprime_arv(){
-
-    cout << "(";
-    if (!this){
-        cout << ")";
-        return;
-    }
-
-    cout << this -> val << ",";
-    this -> esq -> imprime_arv();
-    cout << ",";
-    this -> dir -> imprime_arv();
-    cout << ")";
-}
-
-nodo *cria_no(int val){
-    nodo *novo;
-
-    if (!(novo = static_cast<nodo*> (malloc(sizeof(nodo))))){
-        fprintf(stderr,"ERRO MALLOC");
-        exit(1);
-    }
-    novo -> dir = NULL;
-    novo -> esq = NULL;
-    novo -> alt = 0;
-    novo -> val = val;
-
-    return novo;
-}
-
-void busca(nodo* arv, int busc){
-
-    if (!arv)
-        return;
-
-    cout << arv -> val;
-
-    if (busc == arv -> val)
-        return;
-    cout << ",";
-
-    if (busc < arv -> val)
-        busca(arv -> esq, busc);
-
-    busca(arv -> dir, busc);
-    return;
-}
-
-short confere_bal(nodo *arv){
-    short bal;
- 
-    if (!arv) 
-        return -1;
-
-    bal = confere_bal(arv -> esq) - confere_bal(arv -> dir);
-
-    if (bal == 2){
-        if ((arv -> esq -> dir -> altura_no()) > (arv -> esq -> esq -> altura_no()))
-            arv = rot_esq_j(arv);
-        arv = rot_dir_s(arv);
-        return arv -> r_arruma_alt();
-    }
-    if (bal == -2){
-        if ((arv -> dir -> esq -> altura_no()) > (arv -> dir -> dir -> altura_no()))
-            arv = rot_dir_j(arv);
-        arv = rot_esq_s(arv);
-        return arv -> r_arruma_alt();
-    }
-     
-    return arv -> alt;
-}
-
-nodo *rot_dir_s(nodo* arv){
-    nodo *aux;
-    nodo *root;
-
-    root = arv -> esq;
-    aux = root -> dir;
-    root -> dir = arv;
-    arv -> esq = aux;
+    if (bal > 1 && val < nodo -> esq -> val) 
+        return AVLTree::rot_dir(nodo);
     
-    return root;
-}
-
-nodo *rot_esq_s(nodo* arv){ 
-    nodo *aux;
-    nodo *root;
-
-    root = arv -> dir;
-    aux = root -> esq;
-    root -> esq = arv;
-    arv -> dir = aux;
-
-    return root;
-}
-
-nodo *rot_dir_j(nodo* arv){
-    nodo *aux;
-
-    aux = arv -> dir -> esq -> dir;
-    arv -> dir -> esq -> dir = arv -> dir;
-    arv -> dir = arv -> dir -> esq;
-    arv -> dir -> dir -> esq = aux;
-
-    return arv;
-}
-
-nodo *rot_esq_j(nodo *arv){
-    nodo *aux;
-
-    aux = arv -> esq -> dir -> esq;
-    arv -> esq -> dir -> esq = arv -> esq;
-    arv -> esq = arv -> esq -> dir;
-    arv -> esq -> esq -> dir = aux;
-
-    return arv;
-}
-
-nodo* nodo::f_esq(){
-    nodo *aux;
-
-    if (!this -> esq){
-        aux = *this;
-        *this = this -> dir;
-        return aux;
-    }
+    if (bal < -1 && val > nodo -> dir -> val) 
+        return AVLTree::rot_esq(nodo);
     
-    return nodo::f_esq();
-}
-
-nodo* nodo::f_dir(){
-    nodo *aux;
-
-    if (!this -> dir){
-        aux = this;
-        this = this -> esq;
-        return aux;
+    if (bal > 1 && val > nodo -> esq -> val) {
+        nodo -> esq = AVLTree::rot_esq(nodo -> esq);
+        return AVLTree::rot_dir(nodo);
     }
 
-    return nodo::f_dir();
+    if (bal < -1 && val < nodo -> dir -> val) {
+        nodo -> dir = AVLTree::rot_dir(nodo -> dir);
+        return AVLTree::rot_esq(nodo);
+    }
+
+    return nodo;
 }
 
-nodo *remov(nodo** arv, int rem){
-    nodo *aux;
+nodo_t* AVLTree::rot_dir(nodo_t* y) {
+    nodo_t* x;
+    nodo_t* T2;
 
-    if (!(*arv)){
-        fprintf(stderr, "não encontrado");
-        exit(1);
-    }
-    
-    if ((*arv) -> val == rem){
-        if (((*arv) -> dir) && ((*arv) -> esq)){
-            if (((*arv) -> dir -> alt) > ((*arv) -> esq -> alt))
-                aux = f_esq(&(*arv) -> dir);
-            else 
-                aux = f_dir(&(*arv) -> esq);
-            aux -> dir = (*arv) -> dir;
-            aux -> esq = (*arv) -> esq;
-            free(*arv);
-            return aux;
+    x = y -> esq;
+    T2 = x -> dir;
+    x -> dir = y;
+    y -> esq = T2;
+
+    AVLTree::att_altura(y);
+    AVLTree::att_altura(x);
+
+    return x;
+}
+
+nodo_t* AVLTree::rot_esq(nodo_t* x) {
+    nodo_t* y;
+    nodo_t* T2;
+
+    y = x -> dir;
+    T2 = y -> esq;
+    y -> esq = x;
+    x -> dir = T2;
+
+    AVLTree::att_altura(x);
+    AVLTree::att_altura(y);
+
+    return y;
+}
+
+nodo_t* AVLTree::remove(nodo_t* nodo, int val) {
+    nodo_t* temp;
+
+    if (!nodo) return nodo;
+
+    if (val < nodo -> val) {
+        nodo -> esq = remove(nodo -> esq, val);
+    } else if (val > nodo -> val) {
+        nodo -> dir = remove(nodo -> dir, val);
+    } else {
+        // nodo with only one child or no child
+        if (!(nodo -> esq) || !(nodo -> dir)) {
+            temp = nodo -> esq ? nodo -> esq : nodo -> dir;
+
+            if (!temp) {
+                temp = nodo;
+                nodo = nullptr;
+            } else {
+                *nodo = *temp;
+            }
+
+            delete temp;
+        } else {
+            // nodo with two children, get the in-order successor (smallest in the dir subtree)
+            temp = minValuenodo(nodo -> dir);
+
+            // Copy the in-order successor's data to this nodo
+            nodo -> val = temp -> val;
+
+            // Delete the in-order successor
+            nodo -> dir = remove(nodo -> dir, temp -> val);
         }
-        
-        if ((*arv) -> dir){
-            aux = (*arv) -> dir;
-            free(*arv);
-            return aux;
-        }
-
-        if ((*arv) -> esq){
-            aux = (*arv) -> esq;
-            free(*arv);
-            return aux;
-        }
-
-        free(*arv);
-        return NULL;
     }
 
-    if ((*arv) -> val > rem){
-        (*arv) -> esq = remov(&(*arv) -> esq, rem);
-        return *arv;
+    if (nodo == nullptr) return nodo;
+
+    updateHeight(nodo);
+
+    int balance = getBalanceFactor(nodo);
+
+    if (balance > 1 && getBalanceFactor(nodo -> esq) >= 0) {
+        return rotatedir(nodo);
+    }
+    if (balance > 1 && getBalanceFactor(nodo -> esq) < 0) {
+        nodo -> esq = rotateesq(nodo -> esq);
+        return rotatedir(nodo);
+    }
+    if (balance < -1 && getBalanceFactor(nodo -> dir) <= 0) {
+        return rotateesq(nodo);
+    }
+    if (balance < -1 && getBalanceFactor(nodo -> dir) > 0) {
+        nodo -> dir = rotatedir(nodo -> dir);
+        return rotateesq(nodo);
     }
 
-    (*arv) -> dir = remov(&(*arv) -> dir, rem);
-    return *arv;
+    return nodo;
+}
+
+// Função auxiliar para encontrar o nó com a chave mínima
+nodo* minValuenodo(nodo* nodo) {
+    nodo* current = nodo;
+    while (current->esq != nullptr) {
+        current = current->esq;
+    }
+    return current;
 }
