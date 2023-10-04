@@ -24,6 +24,8 @@ class nodo {
     void imprime_arv();
 
     void arruma_alt();
+    
+    short r_arruma_alt();  
 };
 
 nodo* rot_dir_s(nodo* arv);
@@ -45,12 +47,6 @@ nodo *cria_no(int val);
 
 short maior(short a, short b);
 
-short altura_no(nodo *no);
-
-short fator_balanceamento(nodo *no);
-
 short confere_bal(nodo **arv);
-
-short r_arruma_alt(nodo *arv);  
 
 #endif /*__AVL_TREE_CPP__*/

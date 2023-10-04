@@ -36,8 +36,8 @@ short nodo::altura_no(){
     return (this)? this -> alt: -1;
 }
 
-short r_arruma_alt(nodo *arv){
-    return (arv)? (maior((arv -> esq -> altura_no()), (arv -> dir -> altura_no())) + 1) : -1;
+short nodo::r_arruma_alt(){
+    return (this)? (maior((this -> esq -> altura_no()), (this -> dir -> altura_no())) + 1) : -1;
 }
 
 void nodo::imprime_arv(){
@@ -97,16 +97,16 @@ short confere_bal(nodo *arv){
     bal = confere_bal(arv -> esq) - confere_bal(arv -> dir);
 
     if (bal == 2){
-        if ((altura_no(arv -> esq -> dir)) > (altura_no(arv -> esq -> esq)))
+        if ((arv -> esq -> dir -> altura_no()) > (arv -> esq -> esq -> altura_no()))
             arv = rot_esq_j(arv);
         arv = rot_dir_s(arv);
-        return r_arruma_alt(arv);
+        return arv -> r_arruma_alt();
     }
     if (bal == -2){
-        if ((altura_no(arv -> dir -> esq)) > (altura_no(arv -> dir -> dir)))
+        if ((arv -> dir -> esq -> altura_no()) > (arv -> dir -> dir -> altura_no()))
             arv = rot_dir_j(arv);
         arv = rot_esq_s(arv);
-        return r_arruma_alt(arv);
+        return arv -> r_arruma_alt();
     }
      
     return arv -> alt;
