@@ -1,4 +1,4 @@
-#include <avl-tree.hpp>
+#include "avl-tree.hpp"
 
 int AVLTree::altura(nodo_t* nodo){
     return (nodo)? nodo -> alt : 0;
@@ -13,8 +13,10 @@ void AVLTree::att_altura(nodo_t* nodo){
 }
 
 void AVLTree::destroi(nodo_t* nodo){
+
     if (!nodo)
         return;
+
     AVLTree::destroi(nodo -> esq);
     AVLTree::destroi(nodo -> dir);
     delete nodo;
@@ -89,24 +91,25 @@ nodo_t* AVLTree::rot_esq(nodo_t* x) {
 
 nodo_t* AVLTree::remove(nodo_t* nodo, int val) {
     nodo_t* temp;
+    int balance;
 
-    if (!nodo) return nodo;
+    if (!nodo) 
+        return nodo;
 
-    if (val < nodo -> val) {
+    if (val < nodo -> val)
         nodo -> esq = remove(nodo -> esq, val);
-    } else if (val > nodo -> val) {
+    else if (val > nodo -> val) 
         nodo -> dir = remove(nodo -> dir, val);
-    } else {
+    else {
         // nodo with only one child or no child
         if (!(nodo -> esq) || !(nodo -> dir)) {
-            temp = nodo -> esq ? nodo -> esq : nodo -> dir;
+            temp = (nodo -> esq) ? nodo -> esq : nodo -> dir;
 
             if (!temp) {
                 temp = nodo;
-                nodo = nullptr;
-            } else {
+                nodo = NULL;
+            } else 
                 *nodo = *temp;
-            }
 
             delete temp;
         } else {
@@ -121,35 +124,72 @@ nodo_t* AVLTree::remove(nodo_t* nodo, int val) {
         }
     }
 
-    if (nodo == nullptr) return nodo;
+    if (!nodo) 
+        return nodo;
 
-    updateHeight(nodo);
+    AVLTree::att_altura(nodo);
 
-    int balance = getBalanceFactor(nodo);
+    balance = AVLTree::fator_balanceamento(nodo);
 
-    if (balance > 1 && getBalanceFactor(nodo -> esq) >= 0) {
-        return rotatedir(nodo);
+    if ((balance > 1) && AVLTree::fator_balanceamento(nodo -> esq) >= 0) {
+        return AVLTree::rot_dir(nodo);
     }
-    if (balance > 1 && getBalanceFactor(nodo -> esq) < 0) {
-        nodo -> esq = rotateesq(nodo -> esq);
-        return rotatedir(nodo);
+    if ((balance > 1) && AVLTree::fator_balanceamento(nodo -> esq) < 0) {
+        nodo -> esq = AVLTree::rot_esq(nodo -> esq);
+        return AVLTree::rot_dir(nodo);
     }
-    if (balance < -1 && getBalanceFactor(nodo -> dir) <= 0) {
-        return rotateesq(nodo);
+    if ((balance < -1) && AVLTree::fator_balanceamento(nodo -> dir) <= 0) {
+        return AVLTree::rot_esq(nodo);
     }
-    if (balance < -1 && getBalanceFactor(nodo -> dir) > 0) {
-        nodo -> dir = rotatedir(nodo -> dir);
-        return rotateesq(nodo);
+    if ((balance < -1) && AVLTree::fator_balanceamento(nodo -> dir) > 0) {
+        nodo -> dir = AVLTree::rot_dir(nodo -> dir);
+        return AVLTree::rot_esq(nodo);
     }
 
     return nodo;
 }
 
 // Função auxiliar para encontrar o nó com a chave mínima
-nodo* minValuenodo(nodo* nodo) {
-    nodo* current = nodo;
-    while (current->esq != nullptr) {
-        current = current->esq;
+nodo_t* AVLTree::minValuenodo(nodo_t* nodo) {
+    nodo_t* atual;
+
+    atual = nodo;
+    while (atual -> esq) 
+        atual = atual -> esq;
+    
+    return atual;
+}
+
+void AVLTree::imprime_arv(nodo_t* nodo){
+
+    cout << "(";
+    if (!nodo){
+        cout << ")";
+        return;
     }
-    return current;
+
+    cout << nodo -> val << ",";
+    imprime_arv(nodo -> esq);
+    cout << ",";
+    imprime_arv(nodo -> dir);
+    cout << ")";
+}
+
+void AVLTree::busca(nodo_t* nodo, int val){
+
+    if (!nodo)
+        return;
+
+    cout << nodo -> val;
+
+    if (val == nodo -> val)
+        return;
+    cout << ",";
+
+    if (val < nodo -> val){
+        busca(nodo -> esq, val);
+        return;
+    }
+    busca(nodo -> dir, val);
+    return;
 }
